@@ -1,29 +1,60 @@
 import os
 from datetime import date
-from typing import Any, Optional
+from typing import Optional
 
 from dotenv import load_dotenv
 from supabase import Client, create_client
 
+try:
+    import streamlit as st
+except Exception:
+    st = None
+
+
+# ============================================================
+# ENV / SECRETS
+# ============================================================
 
 load_dotenv()
 
 
-# ============================================================
-# CLIENT
-# ============================================================
+def _get_config_value(key: str) -> Optional[str]:
+    """
+    Read config from Streamlit Cloud secrets first,
+    then fall back to local .env / environment variables.
+    """
+
+    if st is not None:
+        try:
+            value = st.secrets.get(key)
+            if value:
+                return str(value)
+        except Exception:
+            pass
+
+    value = os.getenv(key)
+
+    if value:
+        return value
+
+    return None
+
 
 def get_supabase_client() -> Client:
-    url = os.getenv("SUPABASE_URL")
-    key = os.getenv("SUPABASE_KEY")
+    url = _get_config_value("SUPABASE_URL")
+    key = _get_config_value("SUPABASE_KEY")
 
     if not url or not key:
         raise RuntimeError(
-            "Supabase credentials are missing. "
-            "Check your .env file."
+            "Missing Supabase configuration. "
+            "Set SUPABASE_URL and SUPABASE_KEY "
+            "in local .env or Streamlit Cloud Secrets."
         )
 
-    return create_client(url, key)
+    return create_client(
+        url,
+        key,
+    )
 
 
 # ============================================================
@@ -32,21 +63,16 @@ def get_supabase_client() -> Client:
 
 def create_purchase(
     client: Client,
-    purchase_data: dict[str, Any],
-) -> dict:
+    payload: dict,
+):
     response = (
         client
         .table("purchases")
-        .insert(purchase_data)
+        .insert(payload)
         .execute()
     )
 
-    if not response.data:
-        raise RuntimeError(
-            "Purchase was not created."
-        )
-
-    return response.data[0]
+    return response.data
 
 
 def get_purchases(
@@ -82,21 +108,23 @@ def get_purchase_by_id(
         .execute()
     )
 
-    if not response.data:
+    rows = response.data or []
+
+    if not rows:
         return None
 
-    return response.data[0]
+    return rows[0]
 
 
 def update_purchase(
     client: Client,
     purchase_id: str,
-    update_data: dict[str, Any],
-) -> dict:
+    payload: dict,
+):
     response = (
         client
         .table("purchases")
-        .update(update_data)
+        .update(payload)
         .eq(
             "id",
             purchase_id,
@@ -104,19 +132,14 @@ def update_purchase(
         .execute()
     )
 
-    if not response.data:
-        raise RuntimeError(
-            "Purchase was not updated."
-        )
-
-    return response.data[0]
+    return response.data
 
 
 def delete_purchase(
     client: Client,
     purchase_id: str,
-) -> None:
-    (
+):
+    response = (
         client
         .table("purchases")
         .delete()
@@ -126,6 +149,8 @@ def delete_purchase(
         )
         .execute()
     )
+
+    return response.data
 
 
 # ============================================================
@@ -137,33 +162,26 @@ def create_usage_log(
     purchase_id: str,
     user_id: str,
     used_on: date,
-) -> dict:
-    """
-    Record that a product was used on a particular date.
+):
+    payload = {
+        "purchase_id":
+            purchase_id,
 
-    Database unique constraint prevents the same purchase
-    from being logged more than once on the same day.
-    """
+        "user_id":
+            user_id,
+
+        "used_on":
+            used_on.isoformat(),
+    }
 
     response = (
         client
         .table("usage_logs")
-        .insert(
-            {
-                "purchase_id": purchase_id,
-                "user_id": user_id,
-                "used_on": used_on.isoformat(),
-            }
-        )
+        .insert(payload)
         .execute()
     )
 
-    if not response.data:
-        raise RuntimeError(
-            "Usage log was not created."
-        )
-
-    return response.data[0]
+    return response.data
 
 
 def get_usage_logs(
@@ -212,6 +230,7 @@ def get_usage_logs_between(
 
 def get_usage_log_count(
     client: Client,
+    purchase_id: str,
 ) -> int:
     response = (
         client
@@ -220,17 +239,24 @@ def get_usage_log_count(
             "id",
             count="exact",
         )
+        .eq(
+            "purchase_id",
+            purchase_id,
+        )
         .execute()
     )
 
-    return response.count or 0
+    return int(
+        response.count
+        or 0
+    )
 
 
 def delete_usage_log(
     client: Client,
     usage_log_id: str,
-) -> None:
-    (
+):
+    response = (
         client
         .table("usage_logs")
         .delete()
@@ -240,3 +266,5 @@ def delete_usage_log(
         )
         .execute()
     )
+
+    return response.data
