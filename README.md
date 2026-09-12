@@ -1,5 +1,12 @@
 # WorthIt — Personal Purchase Intelligence
 
+![Python](https://img.shields.io/badge/Python-3.12+-3776AB?logo=python&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-App-FF4B4B?logo=streamlit&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-Backend-3ECF8E?logo=supabase&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-4169E1?logo=postgresql&logoColor=white)
+![pytest](https://img.shields.io/badge/Tests-pytest-0A9EDC?logo=pytest&logoColor=white)
+[![Live Demo](https://img.shields.io/badge/Live-Demo-705CFF)](https://worthit-purchase-intelligence.streamlit.app)
+
 **WorthIt** is a personal purchase intelligence app that helps users answer a simple question:
 
 > **Was my money actually well spent?**
@@ -11,6 +18,8 @@ It is designed as a multi-user web application with private user data, interacti
 ## Live Demo
 
 **App:** https://worthit-purchase-intelligence.streamlit.app
+
+**Repository:** https://github.com/arazahra11/worthit-purchase-intelligence
 
 ## Features
 
@@ -204,8 +213,6 @@ Examples of stronger evidence include:
 - Actual purchase dates
 - Real historical usage information
 
-This prevents a high score based on incomplete data from being interpreted as equally reliable as a high score backed by stronger evidence.
-
 ## Usage Calendar
 
 Usage is logged only through the Usage Calendar.
@@ -223,8 +230,6 @@ The system prevents:
 - Logging usage before the purchase date
 - Logging usage in the future
 - Duplicate usage logs for the same product on the same calendar day
-
-This provides a cleaner behavioral history than a generic “Used Today” button.
 
 ## Architecture
 
@@ -290,13 +295,7 @@ WorthIt is designed as a multi-user application.
 
 Each purchase and usage log is associated with a Supabase Auth user.
 
-Supabase Row Level Security ensures users can only:
-
-- Read their own purchases
-- Create purchases for themselves
-- Update their own purchases
-- Delete their own purchases
-- Read and modify only their own usage logs
+Supabase Row Level Security ensures users can only access their own data.
 
 The public GitHub repository does **not** contain:
 
@@ -305,33 +304,28 @@ The public GitHub repository does **not** contain:
 - Private seed data
 - Personal purchase import scripts
 
-Production credentials are stored using Streamlit Secrets.
+Production configuration is stored using Streamlit Secrets.
 
 ## Tech Stack
 
 ### Frontend
-
 - Streamlit
 - Custom HTML
 - Custom CSS
 
 ### Backend
-
 - Python
 - Supabase Python client
 
 ### Database & Authentication
-
 - Supabase Auth
 - PostgreSQL
 - Row Level Security
 
 ### Testing
-
 - pytest
 
 ### Deployment
-
 - GitHub
 - Streamlit Community Cloud
 
@@ -411,7 +405,7 @@ WorthIt was designed around:
 - **Consistency** — shared visual system for colors, cards, typography, and spacing
 - **Accessibility** — contrast, focus states, and reduced-motion support
 - **Feedback** — toast notifications, validation messages, and hover interactions
-- **Readability** — large hierarchy and comfortable line spacing
+- **Readability** — clear hierarchy and comfortable line spacing
 - **Brand identity** — colorful category-aware visuals rather than a generic dashboard template
 
 ## Current Dataset
@@ -429,8 +423,6 @@ The development version was tested with a personal historical purchase dataset c
 The personal source dataset is intentionally excluded from this public repository.
 
 ## Future Improvements
-
-Planned directions include:
 
 - Cost-per-use analytics
 - Observed usage frequency from calendar logs
